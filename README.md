@@ -38,7 +38,7 @@ Developers sometimes commit secrets by accident (a `.env` file, a cloud key in a
 What this shows: no single scanner was enough. A scanner that reads only current files found none of the deleted secrets, and nothing found the key hidden in a zip file. Layering tools found the most.
 
 ## Real-world check
-I ran the process on my own public repo, [Alert-Triage-Agent](https://github.com/OmK-security/Alert-Triage-Agent), on Oct 23, 2026 (latest commit scanned: `795e729`).
+I ran the process on my own public repo, [Alert-Triage-Agent](https://github.com/OmK-security/Alert-Triage-Agent), and the results are attached below.
 
 | Check | Result |
 |---|---|
@@ -51,7 +51,7 @@ The repo uses keyless authentication from GitHub Actions to Google Cloud, so the
 
 This covers only the repo's commits. Pull request refs, issues, wikis and forks were not scanned, and "no findings" means none found by these tools, not none present.
 
-## Limits (please read)
+## Limits:
 - It is a small, synthetic test I designed myself. It is **not a benchmark** and says nothing about how these tools rank in real projects.
 - I wrote the fallback scanner and the test repo, so the fallback's score is not independent evidence.
 - gitleaks and TruffleHog (Truffle Security) could not be installed in my test environment, so they were **not** tested. Their commands in the skill come from their documentation. `trufflehog3` in the table is a different, Python-based tool.
