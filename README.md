@@ -2,7 +2,7 @@
 
 A step-by-step process for finding API keys, passwords, tokens and certificates that were committed to a GitHub repo, **including ones that were later deleted**, packaged as a Claude skill and tested on a fake repo.
 
-## The problem
+## The problem:
 Developers sometimes commit secrets by accident (a `.env` file, a cloud key in a config). Deleting the secret in a later commit does not remove it: Git keeps every past version, so it stays in the history, on other branches and in old clones. A key that still works can mean unexpected cloud bills, stolen data or access to production systems.
 
 ## The process (8 steps, in `skill/SKILL.md`)
@@ -15,7 +15,7 @@ Developers sometimes commit secrets by accident (a `.env` file, a cloud key in a
 7. Prevent repeats: push protection, pre-commit hook, CI check, short-lived credentials
 8. Report, including what the tools cannot see
 
-## What's in this repo
+## What's in this repo:
 | Path | What it is |
 |---|---|
 | `skill/SKILL.md` | The Claude skill (the process above plus the fallback scanner) |
@@ -24,7 +24,7 @@ Developers sometimes commit secrets by accident (a `.env` file, a cloud key in a
 | `test/score.py`, `test/run_test.sh` | Run three scanners on the fake repo and score them |
 | `results/` | Output of the test run |
 
-## Results
+## Results:
 | Scanner | True-secret files found | Deleted/branch-only found | False-positive files | Hard cases found |
 |---|---|---|---|---|
 | fallback scanner (skill) | 10/13 | 3/3 | 1 | 0/3 |
@@ -37,7 +37,7 @@ Developers sometimes commit secrets by accident (a `.env` file, a cloud key in a
 
 What this shows: no single scanner was enough. A scanner that reads only current files found none of the deleted secrets, and nothing found the key hidden in a zip file. Layering tools found the most.
 
-## Real-world check
+## Real-world check:
 I ran the process on my own public repo, [Alert-Triage-Agent](https://github.com/OmK-security/Alert-Triage-Agent), and the results are attached below.
 
 | Check | Result |
@@ -57,17 +57,17 @@ This covers only the repo's commits. Pull request refs, issues, wikis and forks 
 - gitleaks and TruffleHog (Truffle Security) could not be installed in my test environment, so they were **not** tested. Their commands in the skill come from their documentation. `trufflehog3` in the table is a different, Python-based tool.
 - All secrets are randomly generated fakes. The private key is a throwaway created at build time. The fake repo is generated when you run the test and is not stored here.
 
-## Run the test yourself
+## Run the test yourself:
 ```bash
 pip install detect-secrets trufflehog3
 ./test/run_test.sh        # needs git, openssl, python3
 ```
 
-## Use the skill
+## Use the skill:
 Add `skill/SKILL.md` as a skill in Claude, then ask: "Check my repo for leaked secrets." Only point it at repos you own or have permission to test.
 
-## Sources
+## Sources:
 GitHub Docs (secret scanning, push protection, removing sensitive data), OWASP Secrets Management Cheat Sheet, and the gitleaks, TruffleHog and detect-secrets documentation.
 
-## License
+## License:
 MIT
