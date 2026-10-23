@@ -37,6 +37,20 @@ Developers sometimes commit secrets by accident (a `.env` file, a cloud key in a
 
 What this shows: no single scanner was enough. A scanner that reads only current files found none of the deleted secrets, and nothing found the key hidden in a zip file. Layering tools found the most.
 
+## Real-world check
+I ran the process on my own public repo, [Alert-Triage-Agent](https://github.com/OmK-security/Alert-Triage-Agent), on Oct 23, 2026 (latest commit scanned: `795e729`).
+
+| Check | Result |
+|---|---|
+| Full-history scan, all branches (27 commits) | 0 findings |
+| Sweep for `.env`, key, state and credential file names | None ever committed |
+| Archive files (zip, tar) | None |
+| detect-secrets on current files | 1 finding, a false alarm: the name of a Workload Identity Federation provider, which is an identifier and not a credential |
+
+The repo uses keyless authentication from GitHub Actions to Google Cloud, so there was no stored cloud key to leak.
+
+This covers only the repo's commits. Pull request refs, issues, wikis and forks were not scanned, and "no findings" means none found by these tools, not none present.
+
 ## Limits (please read)
 - It is a small, synthetic test I designed myself. It is **not a benchmark** and says nothing about how these tools rank in real projects.
 - I wrote the fallback scanner and the test repo, so the fallback's score is not independent evidence.
