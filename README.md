@@ -6,14 +6,14 @@ A step-by-step process for finding API keys, passwords, tokens and certificates 
 Developers sometimes commit secrets by accident (a `.env` file, a cloud key in a config). Deleting the secret in a later commit does not remove it: Git keeps every past version, so it stays in the history, on other branches and in old clones. A key that still works can mean unexpected cloud bills, stolen data or access to production systems.
 
 ## The process (8 steps, in `skill/SKILL.md`)
-0. Scope and authorization: only scan what you own or have permission to test
-1. Collect a full copy (`git clone --mirror`, never shallow)
-2. Ask GitHub what it already knows (secret scanning alerts, push protection status)
-3. Detect in layers: gitleaks, TruffleHog, detect-secrets, a file-name sweep, an archive check, plus a built-in fallback scanner
-4. Triage: remove duplicates and false positives, check whether the key is live, rank by risk
-5. Respond in order: **rotate or revoke first**, check the provider's logs for misuse, remove from code, rewrite history only if needed, re-scan
-6. Prevent repeats: push protection, pre-commit hook, CI check, short-lived credentials
-7. Report, including what the tools cannot see
+1. Scope and authorization: only scan what you own or have permission to test
+2. Collect a full copy (`git clone --mirror`, never shallow)
+3. Ask GitHub what it already knows (secret scanning alerts, push protection status)
+4. Detect in layers: gitleaks, TruffleHog, detect-secrets, a file-name sweep, an archive check, plus a built-in fallback scanner
+5. Triage: remove duplicates and false positives, check whether the key is live, rank by risk
+6. Respond in order: **rotate or revoke first**, check the provider's logs for misuse, remove from code, rewrite history only if needed, re-scan
+7. Prevent repeats: push protection, pre-commit hook, CI check, short-lived credentials
+8. Report, including what the tools cannot see
 
 ## What's in this repo
 | Path | What it is |
