@@ -7,22 +7,22 @@ description: Check whether API keys, passwords, tokens or certificates are commi
 
 Find secrets committed to GitHub repos, rank them, and fix them in the right order. Work on repos the user owns or is authorized to test. Never print a full secret: show the first 4 characters and the length. Never use a found credential for anything except the provider's own validity check, and only when the user owns it.
 
-## Step 0: Scope and authorization
+## Step 1: Scope and authorization
 1. Confirm the target (one repo, a user's repos, or an org) and that the user owns it or has written permission.
 2. List where secrets can hide, then decide what is in scope: every branch, tags, pull request refs (`refs/pull/*`), forks, archived repos, wikis, issues and PR comments, gists, releases and uploaded assets, CI logs, container images, zip files and other binaries.
 
-## Step 1: Collect a full copy
+## Step 2: Collect a full copy
 - `git clone --mirror <url> repo.git` (a mirror holds all branches and tags; a shallow clone hides history, so never use `--depth`).
 - Add PR refs when readable: `git -C repo.git fetch origin '+refs/pull/*:refs/pull/*'` (read-only refs can fail; note it and move on).
 - For an org, list repos with `gh api --paginate /orgs/<org>/repos` and loop.
 - Wikis are separate repos: `<repo>.wiki.git`.
 
-## Step 2: Ask GitHub what it already knows
+## Step 3: Ask GitHub what it already knows
 - Is scanning on? `gh api /repos/<o>/<r>` and read `security_and_analysis` (`secret_scanning`, `secret_scanning_push_protection`).
 - Existing alerts: `gh api --paginate /repos/<o>/<r>/secret-scanning/alerts?state=open`. Note the secret type, validity (when shown) and the locations endpoint.
 - Know the limits: public repos get scanning free; private repos need GitHub Secret Protection. Passwords have no push protection or validity check. Pattern coverage is provider-based, so custom or internal secrets can be missed.
 
-## Step 3: Detect in layers (run at least two tools and compare, per OWASP)
+## Step 4: Detect in layers (run at least two tools and compare, per OWASP)
 Run each on the full history, not just the current files.
 1. **gitleaks** (patterns + entropy): `gitleaks git --redact -f json -r gitleaks.json repo.git`; also `gitleaks dir --redact .` for the working tree. Add `--max-decode-depth 3` to decode base64/hex and `--max-archive-depth 2` to look inside zip/tar. Exit code 1 means leaks found. Gitleaks is in maintenance mode; the maintainer is moving focus to Betterleaks.
 2. **TruffleHog** (patterns + live verification): `trufflehog git file://./repo.git --results=verified,unknown --json`. Statuses are verified, unverified and unknown. Verification contacts the provider, so run it only on credentials the user owns.
@@ -32,14 +32,14 @@ Run each on the full history, not just the current files.
    `git -C repo.git log --all --name-only --format= | sort -u | grep -Ei '<patterns>'`
 6. **Archives and binaries:** list them with `git -C repo.git log --all --name-only --format= | grep -Ei '\.(zip|tar|gz|jar|war|7z)$'` and scan their contents (gitleaks archive depth, or unpack to a temp folder and rescan).
 
-## Step 4: Triage every finding
+## Step 5: Triage every finding
 For each one record: secret type, file, line, first commit that added it, author and date, branches and tags that contain it, and whether the exact value is still in the checked-out tree or only in history.
 1. **Dedupe** the same value across tools and commits.
 2. **Classify:** real credential, test fixture or placeholder (`YOUR_KEY_HERE`, `changeme`, example hosts), or non-secret (git SHAs, UUIDs, hashes, integrity strings). Expect false positives from generic and entropy rules.
 3. **Check if live,** only for credentials the user owns: TruffleHog verification, GitHub validity status, or the provider's own "whoami" call (for AWS, `aws sts get-caller-identity`). A deleted-from-code key can still be live.
 4. **Rank:** live and powerful (cloud admin, payment, production database) > live and narrow > not live. Raise severity if the repo is public or was ever public, if the secret is old (more time exposed), or if forks exist.
 
-## Step 5: Respond (order matters)
+## Step 6: Respond (order matters)
 1. **Revoke or rotate first.** Once a secret was pushed, treat it as burned, whether or not the repo is private. Issue a new least-privilege secret, preferably short-lived or fetched from a secret manager.
 2. **Check for misuse:** review the provider's audit log for use of the old key during the whole exposure window (CloudTrail, GitHub audit log, payment dashboard). Start an incident record if there was unexpected use.
 3. **Remove it from the code:** read it from environment variables or a secret manager instead, and add the file to `.gitignore`.
@@ -52,7 +52,7 @@ For each one record: secret type, file, line, first commit that added it, author
    - Forks keep the old commits: ask owners to delete or clean them. Collaborators must re-clone or rebase, never merge old branches back.
 5. **Re-scan** the rewritten history and confirm the finding is gone.
 
-## Step 6: Prevent repeats
+## Step 7: Prevent repeats
 - Turn on secret scanning and push protection (repo or org level). Require a reason for bypasses and review them.
 - Add a pre-commit hook (gitleaks or detect-secrets) and a CI job that fails on new findings. Keep a baseline so only new findings block.
 - Add custom patterns for internal token formats.
@@ -61,10 +61,10 @@ For each one record: secret type, file, line, first commit that added it, author
 - Allowlist narrowly (a specific commit, path and rule), never a whole folder, and review allowlists regularly.
 - Keep a runbook: who to notify, how to rotate, who depends on each secret.
 
-## Step 7: Report
+## Step 8: Report
 Give a table: severity, type, location (file:line, commit, branch), in-HEAD or history-only, live status, action taken, owner. State which tools ran, what was out of scope, and what these tools cannot see (split strings, encrypted blobs, unusual formats, secrets in images or screenshots). Say that "no findings" means none found by these tools, not none present.
 
-## Fallback scanner (Step 3.4)
+## Fallback scanner (Step 4.4)
 Save as `secret_scan_fallback.py` and run `python3 -I secret_scan_fallback.py /path/to/repo [--json out.json]`. It prints redacted findings and exits 1 if any exist. Its rules cover AWS, GitHub, Slack, Google, Stripe, private keys, JWTs, credentialed URLs, keyword assignments with an entropy check, base64-wrapped secrets and suspicious file names. Known gaps: split strings, low-entropy human passwords, archives.
 
 ```python
